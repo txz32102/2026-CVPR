@@ -1,0 +1,18 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "temp1",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "main_train_psnr.py",
+      "python": "/home/data1/musong/envs/main/bin/python",
+      "args": [
+        "--opt", "options/swinir/9-27-train_realworld.json",
+
+      ],
+      "console": "integratedTerminal",
+      "justMyCode": true
+    }
+  ]
+}
