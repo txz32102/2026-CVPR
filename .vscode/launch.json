@@ -5,12 +5,12 @@
       "name": "temp1",
       "type": "debugpy",
       "request": "launch",
-      "program": "main_train_psnr.py",
+      "program": "${file}",
       "python": "/home/data1/musong/envs/main/bin/python",
-      "args": [
-        "--opt", "options/swinir/9-27-train_realworld.json",
-
-      ],
+      // "args": [
+      //   "--opt", "options/swinir/9-27-train_realworld.json"
+      // ],
+      "cwd": "/home/data1/musong/workspace/python/2026-CVPR/my-repo",
       "console": "integratedTerminal",
       "justMyCode": true
     }
