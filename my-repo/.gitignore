@@ -2,3 +2,5 @@ weights
 log
 inverse/__pycache__
 guided_diffusion/__pycache__
+my_utils/__pycache__
+models/__pycache__

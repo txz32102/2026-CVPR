@@ -1,3 +1,10 @@
+"""
+please ensure the dataset has images!!!
+
+which is /home/data1/musong/workspace/python/2026-CVPR/my-repo/log/ddrm/datasets/ood_celeba/0
+
+"""
+
 from dataclasses import dataclass, field
 from typing import List
 from inverse.ddrm import Diffusion
@@ -65,7 +72,7 @@ class ARGS:
     comment: str = ''
     verbose: str = 'info'
     sample: bool = False
-    image_folder: str = "log/ddrm/datasets/ood_celeba/0"
+    image_folder: str = "log/ddrm/sampled"
     ckpt: str = "weights/celeba_hq.ckpt"
     ni: bool = True
     timesteps: int = 20
@@ -75,7 +82,6 @@ class ARGS:
     etaB: float = 1.0
     subset_start: int = -1
     subset_end: int = -1
-    log_path: str = 'log/ddrm/exp'
 # -----------------------------
 # Instantiate and run
 # -----------------------------

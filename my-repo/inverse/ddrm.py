@@ -2302,4 +2302,73 @@ class Diffusion(object):
         return x
     
     def sample_one(self, image):
-        pass
+        cls_fn = None
+        if self.config.model.type == 'simple':    
+            model = Model(self.config)
+            # This used the pretrained DDPM model, see https://github.com/pesser/pytorch_diffusion
+            if self.config.data.dataset == "CIFAR10":
+                name = "cifar10"
+            elif self.config.data.dataset == "LSUN":
+                name = f"lsun_{self.config.data.category}"
+            elif self.config.data.dataset == 'CelebA_HQ':
+                name = 'celeba_hq'
+            else:
+                raise ValueError
+            if name != 'celeba_hq':
+                ckpt = self.args.ckpt
+                print("Loading checkpoint {}".format(ckpt))
+            elif name == 'celeba_hq':
+                #ckpt = '~/.cache/diffusion_models_converted/celeba_hq.ckpt'
+                ckpt = self.args.ckpt
+                if not os.path.exists(ckpt):
+                    download('https://image-editing-test-12345.s3-us-west-2.amazonaws.com/checkpoints/celeba_hq.ckpt', ckpt)
+            else:
+                raise ValueError
+            model.load_state_dict(torch.load(ckpt, map_location=self.device))
+            model.to(self.device)
+            model = torch.nn.DataParallel(model)
+
+        elif self.config.model.type == 'openai':
+            config_dict = vars(self.config.model)
+            model = create_model(**config_dict)
+            if self.config.model.use_fp16:
+                model.convert_to_fp16()
+            if self.config.model.class_cond:
+                ckpt = os.path.join(self.args.exp, 'logs/imagenet/%dx%d_diffusion.pt' % (self.config.data.image_size, self.config.data.image_size))
+                if not os.path.exists(ckpt):
+                    download('https://openaipublic.blob.core.windows.net/diffusion/jul-2021/%dx%d_diffusion_uncond.pt' % (self.config.data.image_size, self.config.data.image_size), ckpt)
+            else:
+                ckpt = os.path.join(self.args.exp, "logs/imagenet/256x256_diffusion_uncond.pt")
+                if not os.path.exists(ckpt):
+                    download('https://openaipublic.blob.core.windows.net/diffusion/jul-2021/256x256_diffusion_uncond.pt', ckpt)
+                
+            
+            model.load_state_dict(torch.load(ckpt, map_location=self.device))
+            model.to(self.device)
+            model.eval()
+            model = torch.nn.DataParallel(model)
+
+            if self.config.model.class_cond:
+                ckpt = os.path.join(self.args.exp, 'logs/imagenet/%dx%d_classifier.pt' % (self.config.data.image_size, self.config.data.image_size))
+                if not os.path.exists(ckpt):
+                    image_size = self.config.data.image_size
+                    download('https://openaipublic.blob.core.windows.net/diffusion/jul-2021/%dx%d_classifier.pt' % image_size, ckpt)
+                classifier = create_classifier(**args_to_dict(self.config.classifier, classifier_defaults().keys()))
+                classifier.load_state_dict(torch.load(ckpt, map_location=self.device))
+                classifier.to(self.device)
+                if self.config.classifier.classifier_use_fp16:
+                    classifier.convert_to_fp16()
+                classifier.eval()
+                classifier = torch.nn.DataParallel(classifier)
+
+                import torch.nn.functional as F
+                def cond_fn(x, t, y):
+                    with torch.enable_grad():
+                        x_in = x.detach().requires_grad_(True)
+                        logits = classifier(x_in, t)
+                        log_probs = F.log_softmax(logits, dim=-1)
+                        selected = log_probs[range(len(logits)), y.view(-1)]
+                        return torch.autograd.grad(selected.sum(), x_in)[0] * self.config.classifier.classifier_scale
+                cls_fn = cond_fn
+
+        self.sample_sequence(model, cls_fn)
