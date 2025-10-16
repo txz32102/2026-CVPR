@@ -1,0 +1,9 @@
+\begin{abstract}
+Test-time adaptation (TTA) for image restoration remains challenging under distribution shift: most methods either fine-tune heavy backbones, require source data, or rely on heuristic consistency losses. 
+We propose \textbf{Diffusion-Teacher Alignment (DiTA)}, a source-free and model-agnostic TTA framework that uses a frozen pretrained diffusion prior as a score-based teacher to define what “source-like” images should look like. 
+Given a test input, a frozen restorer (e.g., SwinIR) produces an initial estimate; 
+DiTA then learns only tiny wrappers (a low-DOF input warp and/or a 2–3-block residual corrector; $\leq$0.5M params) by aligning the corrected output with the teacher via a sampling-free Tweedie/Fisher surrogate across a few noise scales, optionally augmented with lightweight data-consistency guidance. 
+The diffusion model and backbone are never fine-tuned. To ensure reliability, DiTA includes a safety mechanism (hinge risk, trust region, and optional convex blending) that prevents degradation relative to the frozen baseline. 
+DiTA performs compute-light TTA—only 2–4 score queries per image—while consistently maintaining or improving fidelity and quality on out-of-distribution denoising and related restoration tasks. 
+Our results demonstrate that posterior-moment and score alignment to a frozen diffusion prior is an effective, principled alternative to heuristic consistency, enabling robust, source-free TTA for a wide range of restorers without compromising safety.
+\end{abstract}
